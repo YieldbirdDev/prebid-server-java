@@ -198,7 +198,7 @@ public class JdbcApplicationSettingsTest extends VertxTest {
     public void setUp() {
         vertx = Vertx.vertx();
         clock = Clock.fixed(Instant.now(), ZoneId.systemDefault());
-        timeout = new TimeoutFactory(clock).create(5000L);
+        timeout = new TimeoutFactory(clock).create(8000L);
         jdbcApplicationSettings = new JdbcApplicationSettings(
                 jdbcClient(),
                 jacksonMapper,
