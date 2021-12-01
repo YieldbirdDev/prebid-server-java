@@ -40,6 +40,7 @@ public class AlgorixBidder implements Bidder<BidRequest> {
             new TypeReference<ExtPrebid<?, ExtImpAlgorix>>() {
             };
 
+    private static final String URL_REGION_MACRO = "{HOST}";
     private static final String URL_SID_MACRO = "{SID}";
     private static final String URL_TOKEN_MACRO = "{TOKEN}";
 
@@ -74,14 +75,13 @@ public class AlgorixBidder implements Bidder<BidRequest> {
         }
 
         final BidRequest outgoingRequest = request.toBuilder().imp(updatedImps).build();
-        final String body = mapper.encode(outgoingRequest);
         return Result.of(Collections.singletonList(
                         HttpRequest.<BidRequest>builder()
                                 .method(HttpMethod.POST)
                                 .uri(resolveUrl(endpointUrl, extImpAlgorix))
                                 .headers(resolveHeaders())
                                 .payload(outgoingRequest)
-                                .body(body)
+                                .body(mapper.encodeToBytes(outgoingRequest))
                                 .build()),
                 errors);
     }
@@ -134,6 +134,27 @@ public class AlgorixBidder implements Bidder<BidRequest> {
     }
 
     /**
+     * get Region Info From Algorix Ext Imp
+     * Default For Global EP, APAC for apse EP, USE for use EP
+     *
+     * @param extImp Algorix Ext Imp
+     * @return Region String
+     */
+    private static String getRegionInfo(ExtImpAlgorix extImp) {
+        if (Objects.isNull(extImp.getRegion())) {
+            return "xyz";
+        }
+        switch (extImp.getRegion()) {
+            case "APAC":
+                return "apac.xyz";
+            case "USE":
+                return "use.xyz";
+            default:
+                return "xyz";
+        }
+    }
+
+    /**
      * Replace url macro
      *
      * @param endpoint endpoint Url
@@ -142,6 +163,7 @@ public class AlgorixBidder implements Bidder<BidRequest> {
      */
     private static String resolveUrl(String endpoint, ExtImpAlgorix extImp) {
         return endpoint
+                .replace(URL_REGION_MACRO, getRegionInfo(extImp))
                 .replace(URL_SID_MACRO, extImp.getSid())
                 .replace(URL_TOKEN_MACRO, extImp.getToken());
     }
